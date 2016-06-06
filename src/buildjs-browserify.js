@@ -59,6 +59,7 @@ export function buildClientJs(opts, onComplete) {
             if (file.indexOf("node_modules") >= 0) {
                 // files under node_modules are only compiled as es6 if they are included in
                 // moduleMappings - i.e. if chondric was loaded with npm install rather than npm link
+                // note that this breaks if you add module mapping for an es5 module.
                 for (let i = 0; i < moduleMappings.length; i++) {
                     var pn = moduleMappings[i].cwd.toLowerCase();
                     if (file.toLowerCase().indexOf(pn) === 0 && file.lastIndexOf("node_modules") < pn.length) {

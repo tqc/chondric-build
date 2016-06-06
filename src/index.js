@@ -111,7 +111,7 @@ import {buildClientJs as buildRollup} from "./buildjs-rollup"
                 debugMode: debugMode,
                 tempFolder: tempFolder,
                 src: path.resolve(sourceFolder, variation2 + ".js"),
-                dest: path.resolve(sourceFolder, "app" + ".js"),
+                dest: path.resolve(varFolder, "app" + ".js"),
                 moduleMappings: options.moduleMappings
             }
             if (options.useRollup) {
