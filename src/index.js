@@ -69,7 +69,7 @@ import {buildClientJs as buildRollup} from "./buildjs-rollup"
             outputHtmlName: "app",
             additionalData: {}
         }];
-        var variationFolderName = variation2;
+        var variationFolderName = variations[0].key;
 
         if (options.useRollup) {
             console.log("Building with Rollup");

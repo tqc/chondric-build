@@ -9,7 +9,7 @@
   "main": "./dist",
   "esnext:main": "./src",
   "scripts": {
-    "test": "eslint . && mocha",
+    "test": "eslint .",
     "compile": "babel src -d dist"
   },
   "dependencies": {
