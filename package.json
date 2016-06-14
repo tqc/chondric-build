@@ -2,7 +2,7 @@
   "author": "Tom Clarkson",
   "name": "chondric-build",
   "description": "ChondricJS App Framework build tools",
-  "version": "3.0.50",
+  "version": "3.0.51",
   "repository": {
     "url": "http://github.com/tqc/chondric-build"
   },
@@ -28,7 +28,6 @@
     "browserify-build-status": "^1.1.0",
     "browserify-global-shim": "^1.0.0",
     "chokidar": "^1.5.1",
-    "chondric": "^3.0.48",
     "es6ify": "^1.6.0",
     "extend": "^3.0.0",
     "filter-transform": "^0.1.1",

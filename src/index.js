@@ -51,9 +51,6 @@ var options = {
 
 tools.init = function(opt) {
     extend(options, opt);
-        // todo: this is no longer correct
-    options.moduleMappings.chondric = path.dirname(require.resolve("chondric"));
-
 };
 
 tools.test = function() {

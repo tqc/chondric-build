@@ -13,8 +13,10 @@ var stripify = require("stripify");
 
 var gulp = require('gulp');
 
+var fs = require("fs");
 
 export function buildClientJs(opts, onComplete) {
+    console.log("starting browserify build");
     var options = opts.options;
     var tempFolder = opts.tempFolder;
     var debugMode = opts.debugMode;
@@ -56,21 +58,42 @@ export function buildClientJs(opts, onComplete) {
         function(file) {
             // browserify needs transforms to be global, and compiling es5 modules
             // breaks stuff, so only compile the bits we know are es6
+
+            // no need to compile something that isn't javascript
+            if (path.extname(file) != ".js") return false;
+
+            // find the package path
             if (file.indexOf("node_modules") >= 0) {
-                // files under node_modules are only compiled as es6 if they are included in
-                // moduleMappings - i.e. if chondric was loaded with npm install rather than npm link
-                // note that this breaks if you add module mapping for an es5 module.
-                for (let i = 0; i < moduleMappings.length; i++) {
-                    var pn = moduleMappings[i].cwd.toLowerCase();
-                    if (file.toLowerCase().indexOf(pn) === 0 && file.lastIndexOf("node_modules") < pn.length) {
-                        return path.extname(file) === '.js';
-                    }
+                // inside node modules
+                var nmi = file.lastIndexOf("node_modules") + 13;
+                var nmp = file.substr(0, nmi);
+                var seg = file.substr(nmi).split(path.sep);
+                var pkgPath = path.resolve(nmp, seg[0], "package.json");
+                // scoped packages may have an extra folder level
+                if (!fs.existsSync(pkgPath)) pkgPath = path.resolve(nmp, seg[0], seg[1], "package.json");
+                // no package found, assume es5
+                if (!fs.existsSync(pkgPath)) return false;
+                var pkg = JSON.parse(fs.readFileSync(pkgPath), "utf8");
+                if (pkg["esnext:main"] && pkg["esnext:main"] == pkg["main"]) {
+                    // console.log("found es6 only package in " + pkgPath);
+                    return true;
                 }
-                return false;
+                if (pkg["esnext:main"]) {
+                    // todo: this isn't quite right - could be looking at a file in the dist folder
+                    // console.log("found es6 package in " + pkgPath);
+                    return true;
+                }
+                else {
+                    // console.log("found es5 package in " + pkgPath);
+                    return false;
+                }
             }
-            return path.extname(file) === '.js';
-
-
+            else {
+                // console.log("building local file as es6");
+                // local file or linked module
+                // todo: still need to check for package.json
+                return true;
+            }
         },
         es6ify
     );
