@@ -42,10 +42,10 @@ export function buildClientJs(opts, onComplete) {
             cwd: options.moduleMappings[k]
         });
     }
-    console.log("Mapping modules")
+    console.log("Mapping modules");
     for (let i = 0; i < moduleMappings.length; i++) {
         var m = moduleMappings[i];
-        if (i > 0 && m.expose == moduleMappings[i-1].expose) continue;
+        if (i > 0 && m.expose == moduleMappings[i - 1].expose) continue;
         console.log(m.expose + " => " + m.cwd);
     }
 
@@ -146,13 +146,13 @@ export function buildClientJs(opts, onComplete) {
     var statusReporter = require("browserify-build-status");
 
     b.plugin(
-        statusReporter, 
+        statusReporter,
         {
             selector: ".chondric-viewport,[chondric-viewport]",
             onComplete: onComplete
         }
     );
-    b = b.bundle()
+    b = b.bundle();
 
 
     if (debugMode) {

@@ -11,7 +11,7 @@ export function buildClientJs(opts, onComplete) {
     for (let k in opts.moduleMappings) {
         moduleMappings[k] = opts.moduleMappings[k];
     }
-    console.log("Mapping modules")
+    console.log("Mapping modules");
     for (let k in moduleMappings) {
         console.log(k + " => " + moduleMappings[k]);
     }
@@ -90,7 +90,7 @@ export function buildClientJs(opts, onComplete) {
                 compress: true
             })
         ]
-    }).then(function (bundle) {
+    }).then(function(bundle) {
         console.log("got bundle");
         console.log("writing to " + opts.dest);
         try {

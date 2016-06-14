@@ -1,1 +1,1 @@
-window.debugMode=true;
+window.debugMode = true;

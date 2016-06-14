@@ -1,6 +1,5 @@
 {
-	"extends": "../.eslintrc",
+	"extends": "tqc/test",
 	"rules":{
-		"strict": 0,
-    }
+   }
 }

@@ -1,5 +1,4 @@
 module.exports = function htmlmin(opts) {
-    "use strict";
     opts = opts || {};
     var minify = require('html-minifier').minify;
 
@@ -17,7 +16,7 @@ module.exports = function htmlmin(opts) {
 
 
             var html = minify(code, opts);
-            console.log("Minified " + code.length + " to " + html.length );
+            console.log("Minified " + code.length + " to " + html.length);
             if (html.length == 0) console.log(code);
             return {
                 code: 'export default ' + JSON.stringify(html) + ';',
@@ -25,4 +24,4 @@ module.exports = function htmlmin(opts) {
             };
         }
     };
-}
+};
