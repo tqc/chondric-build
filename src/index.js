@@ -74,7 +74,7 @@ tools.buildVariation = function(variation, env, watch, destFolder, onBuildComple
 };
 
 tools.buildVariations = function(variationFolderName, subvariations, env, watch, destFolder, onBuildComplete) {
-console.log(subvariations);
+    console.log(subvariations);
     if (options.useRollup) {
         console.log("Building with Rollup");
     } else {
