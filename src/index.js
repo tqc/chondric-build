@@ -4,6 +4,7 @@ import {buildClientJs as buildRollup} from "./buildjs-rollup";
 
 import * as rebuild from "rebuild-linked";
 
+var modules = rebuild.getModules(process.cwd());
     /* Tools to be called from gulp when building a standard app */
 
 var gulp = require('gulp');
@@ -300,7 +301,8 @@ tools.buildVariation = function(variation2, env, watch, destFolder, onBuildCompl
 
     if (watch) {
 
-        var paths = [path.resolve(__dirname, "../es6"), sourceFolder].concat(options.additionalWatchPaths);
+        var paths = [sourceFolder].concat(options.additionalWatchPaths);
+        paths.push.apply(paths, modules.map(m => m.path));
 
             // watch the css folder if it isn't already watched as part of the source folder
         var cssFolder = path.dirname(path.resolve(cwd, options.cssEntryPoint));
@@ -316,6 +318,8 @@ tools.buildVariation = function(variation2, env, watch, destFolder, onBuildCompl
         if (options.browserTests) {
             paths.push(path.dirname(path.resolve(options.browserTests)));
         }
+        console.log("Watching: ");
+        console.log(paths);
 
         var watcher = chokidar.watch(paths, {
             ignored: /[\/\\]\./,
