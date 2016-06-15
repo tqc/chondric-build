@@ -2,6 +2,8 @@ import {buildHtml} from "./buildhtml";
 import {buildClientJs as buildBrowserify} from "./buildjs-browserify";
 import {buildClientJs as buildRollup} from "./buildjs-rollup";
 
+import * as rebuild from "rebuild-linked";
+
     /* Tools to be called from gulp when building a standard app */
 
 var gulp = require('gulp');
@@ -50,6 +52,7 @@ var options = {
 };
 
 tools.init = function(opt) {
+    rebuild.ensureModulesBuilt(process.cwd());
     extend(options, opt);
 };
 
