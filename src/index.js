@@ -61,15 +61,20 @@ tools.test = function() {
     console.log("Test function");
 };
 
-tools.buildVariation = function(variation2, env, watch, destFolder, onBuildComplete) {
-    var variations = [{
-        key: variation2,
-        outputScriptName: "app",
-        outputHtmlName: "app",
-        additionalData: {}
-    }];
-    var variationFolderName = variations[0].key;
+tools.buildVariation = function(variation, env, watch, destFolder, onBuildComplete) {
+    tools.buildVariations(variation,
+        [{
+            key: "index",
+            title: variation,
+            outputScriptName: "app",
+            outputHtmlName: "index",
+            additionalData: {}
+        }].concat(options.subvariations || []),
+        env, watch, destFolder, onBuildComplete);
+};
 
+tools.buildVariations = function(variationFolderName, subvariations, env, watch, destFolder, onBuildComplete) {
+console.log(subvariations);
     if (options.useRollup) {
         console.log("Building with Rollup");
     } else {
@@ -105,36 +110,49 @@ tools.buildVariation = function(variation2, env, watch, destFolder, onBuildCompl
     var libFolder = path.resolve(cwd, options.libFolder);
 
     function buildClientJs(callback) {
-        var opts = {
-            options: options,
-            debugMode: debugMode,
-            tempFolder: tempFolder,
-            src: path.resolve(sourceFolder, variation2 + ".js"),
-            dest: path.resolve(varFolder, "app" + ".js"),
-            moduleMappings: options.moduleMappings
-        };
-        if (options.useRollup) {
-            buildRollup(opts, callback);
-        }
-        else {
-            buildBrowserify(opts, callback);
-        }
+        async.eachSeries(subvariations, function(subvariation, next) {
+            if (!subvariation.outputScriptName) return next();
+            var opts = {
+                options: options,
+                debugMode: debugMode,
+                tempFolder: tempFolder,
+                src: path.resolve(sourceFolder, variationFolderName + ".js"),
+                dest: path.resolve(varFolder, "app" + ".js"),
+                moduleMappings: options.moduleMappings
+            };
+            if (options.useRollup) {
+                buildRollup(opts, next);
+            }
+            else {
+                buildBrowserify(opts, next);
+            }
 
             // For use with <script>$.getScript(window.atob ? "app.js" : "app-es3.js");</script>
             // no longer needed but kept for backward compatibility
-        var statusReporter = require("browserify-build-status");
-        fs.writeFileSync(path.resolve(varFolder, "app-es3.js"), statusReporter.getErrorScript(options.legacyBrowserError.title, options.legacyBrowserError.message));
+            var statusReporter = require("browserify-build-status");
+            fs.writeFileSync(path.resolve(varFolder, "app-es3.js"), statusReporter.getErrorScript(options.legacyBrowserError.title, options.legacyBrowserError.message));
+        }, callback);
 
     }
 
     function copyHtml(callback) {
-        buildHtml(
-            {
-                options: options,
-                sourceFolders: options.sourceFolders || [sourceFolder],
-                destFolder: varFolder
-            },
-                callback);
+        async.eachSeries(subvariations, function(subvariation, next) {
+            if (!subvariation.outputHtmlName) return next();
+            var td = subvariation.additionalData || {};
+            td.variation = subvariation;
+            buildHtml(
+                {
+                    options: options,
+                    sourceFolders: options.sourceFolders || [sourceFolder],
+                    destFolder: varFolder,
+                    fileMappings: {
+                        "index": subvariation.outputHtmlName,
+                        "index-ie": subvariation.outputHtmlName + "-ie"
+                    },
+                    templateData: td
+                },
+                next);
+        }, callback);
     }
 
     function copyLib(callback) {

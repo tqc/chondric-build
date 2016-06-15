@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
+import ejs from "ejs";
 
 export function buildHtml(options, callback) {
     options.fileMappings = options.fileMappings || {};
@@ -9,33 +10,32 @@ export function buildHtml(options, callback) {
         sourceFolders: [""],
         destFolder: "",
         fileMappings: {
-            "index.ejs": "variation.html",
-            "index-report.ejs": "variation-report.html",
-            "index-ie.ejs": "variation-ie.html"
+            "index": "variation",
+            "index-report": "variation-report",
+            "index-ie": "variation-ie"
         },
         templateData: {}
     }
 */
+    console.log(options.fileMappings);
+    console.log(options.templateData);
+
+    console.log("Looking for ejs / html in ");
+    console.log(options.sourceFolders);
     var sourceFiles = {};
     for (let i = 0; i < options.sourceFolders.length; i++) {
         let files = fs.readdirSync(options.sourceFolders[i]);
         for (let j = 0; j < files.length; j++) {
-            if (files[j].indexOf(".html") > 0) sourceFiles[files[j]] = path.resolve(options.sourceFolders[i], files[j]);
-            if (files[j].indexOf(".ejs") > 0) sourceFiles[files[j]] = path.resolve(options.sourceFolders[i], files[j]);
+            var basename = files[j].replace(/(\.html)|(\.ejs)/, "");
+//            if (files[j].indexOf(".html") > 0) sourceFiles[basename] = path.resolve(options.sourceFolders[i], files[j]);
+            if (files[j].indexOf(".ejs") > 0) sourceFiles[basename] = path.resolve(options.sourceFolders[i], files[j]);
         }
     }
-
     for (let fn in sourceFiles) {
         let htmlContent = "";
-        let outputFilename = options.fileMappings[fn] || fn;
+        let outputFilename = (options.fileMappings[fn] || fn) + ".html";
         let template = fs.readFileSync(sourceFiles[fn], "utf8");
-        if (fn.indexOf(".ejs") > 0) {
-            // todo: compile
-            htmlContent = template;
-        }
-        else {
-            htmlContent = template;
-        }
+        htmlContent = ejs.render(template, options.templateData);
         fs.writeFileSync(path.resolve(options.destFolder, outputFilename), htmlContent);
     }
 
