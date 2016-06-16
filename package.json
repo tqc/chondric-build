@@ -2,7 +2,7 @@
   "author": "Tom Clarkson",
   "name": "chondric-build",
   "description": "ChondricJS App Framework build tools",
-  "version": "3.0.56",
+  "version": "3.0.57",
   "repository": {
     "url": "http://github.com/tqc/chondric-build"
   },
@@ -67,7 +67,6 @@
   },
   "license": "MIT",
   "engines": {
-    "node": "^4.2.2",
-    "npm": "2"
+    "node": ">=4 < 7"
   }
 }
