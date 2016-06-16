@@ -325,6 +325,10 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
         for (var i = 0; i < modules.length; i++) {
             var sf = path.resolve(modules[i].path, "src");
             if (fs.existsSync(sf)) paths.push(sf);
+            sf = path.resolve(modules[i].path, "clientapp");
+            if (fs.existsSync(sf)) paths.push(sf);
+            sf = path.resolve(modules[i].path, "api");
+            if (fs.existsSync(sf)) paths.push(sf);
         }
         //paths.push.apply(paths, modules.map(m => m.path));
 
