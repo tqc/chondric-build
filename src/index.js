@@ -49,7 +49,8 @@ var options = {
     legacyBrowserError: {
         title: "App Error",
         message: "This app is designed for use in modern browsers."
-    }
+    },
+    templateData: {}
 };
 
 tools.init = function(opt) {
@@ -68,7 +69,7 @@ tools.buildVariation = function(variation, env, watch, destFolder, onBuildComple
             title: variation,
             outputScriptName: "app",
             outputHtmlName: "index",
-            additionalData: {}
+            additionalData: options.templateData || {}
         }].concat(options.subvariations || []),
         env, watch, destFolder, onBuildComplete);
 };
@@ -136,16 +137,24 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
     }
 
     function copyHtml(callback) {
+        console.log(subvariations);
         async.eachSeries(subvariations, function(subvariation, next) {
             if (!subvariation.outputHtmlName) return next();
-            var td = subvariation.additionalData || {};
+            var td = subvariation.additionalData || options.templateData || {};
             td.variation = subvariation;
+            td.options = options;
+            var preloadCssPath = path.resolve(varFolder, "inline.css");
+            if (fs.existsSync(preloadCssPath)) {
+                td.inlineCss = fs.readFileSync(preloadCssPath, "utf-8");
+            }
+
+
             buildHtml(
                 {
                     options: options,
                     sourceFolders: options.sourceFolders || [sourceFolder],
                     destFolder: varFolder,
-                    fileMappings: {
+                    fileMappings: subvariation.fileMappings || {
                         "index": subvariation.outputHtmlName,
                         "index-ie": subvariation.outputHtmlName + "-ie"
                     },

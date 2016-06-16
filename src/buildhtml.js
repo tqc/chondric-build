@@ -17,8 +17,8 @@ export function buildHtml(options, callback) {
         templateData: {}
     }
 */
-    console.log(options.fileMappings);
-    console.log(options.templateData);
+//    console.log(options.fileMappings);
+//    console.log(options.templateData);
 
     console.log("Looking for ejs / html in ");
     console.log(options.sourceFolders);
