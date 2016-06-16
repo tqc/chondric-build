@@ -51,7 +51,49 @@ export function buildClientJs(opts, onComplete) {
         console.log(m.expose + " => " + m.cwd);
     }
 
+    var esVersions = {};
+    function getESVersion(file) {
 
+        // inside node modules
+        var nmi = file.lastIndexOf("node_modules") + 13;
+
+        var nmp = file.substr(0, nmi);
+
+        var seg = file.substr(nmi).split(path.sep);
+
+        var pkgPath = path.resolve(nmp, seg[0], "package.json");
+        if (esVersions[pkgPath]) return esVersions[pkgPath];
+
+        // scoped packages may have an extra folder level
+        if (!fs.existsSync(pkgPath)) {
+            pkgPath = path.resolve(nmp, seg[0], seg[1], "package.json");
+        }
+
+        if (esVersions[pkgPath]) return esVersions[pkgPath];
+
+        // no package found, assume es5
+        if (!fs.existsSync(pkgPath)) {
+            esVersions[pkgPath] = 5;
+            return 5;
+        }
+
+        var pkg = JSON.parse(fs.readFileSync(pkgPath), "utf8");
+        if (pkg["esnext:main"] && pkg["esnext:main"] == pkg["main"]) {
+            //console.log("found es6 only package in " + pkgPath);
+            esVersions[pkgPath] = 6;
+            return 6;
+        }
+        if (pkg["esnext:main"]) {
+            // todo: this isn't quite right - could be looking at a file in the dist folder
+            esVersions[pkgPath] = 6;
+            return 6;
+        }
+        else {
+            esVersions[pkgPath] = 5;
+            return 5;
+        }
+
+    }
 
 
     var filteredEs6ify = filterTransform(
@@ -64,34 +106,7 @@ export function buildClientJs(opts, onComplete) {
 
             // find the package path
             if (file.indexOf("node_modules") >= 0) {
-                // inside node modules
-                var nmi = file.lastIndexOf("node_modules") + 13;
-
-                var nmp = file.substr(0, nmi);
-
-                var seg = file.substr(nmi).split(path.sep);
-
-                var pkgPath = path.resolve(nmp, seg[0], "package.json");
-                // scoped packages may have an extra folder level
-                if (!fs.existsSync(pkgPath)) {
-                    pkgPath = path.resolve(nmp, seg[0], seg[1], "package.json");
-                }
-                // no package found, assume es5
-                if (!fs.existsSync(pkgPath)) {
-                    return false;
-                }
-                var pkg = JSON.parse(fs.readFileSync(pkgPath), "utf8");
-                if (pkg["esnext:main"] && pkg["esnext:main"] == pkg["main"]) {
-                    console.log("found es6 only package in " + pkgPath);
-                    return true;
-                }
-                if (pkg["esnext:main"]) {
-                    // todo: this isn't quite right - could be looking at a file in the dist folder
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return getESVersion(file) == 6;
             }
             else {
                 // console.log("building local file as es6");
