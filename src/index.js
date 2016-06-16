@@ -318,21 +318,25 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
     async.series(fullBuild, onBuildComplete);
 
     if (watch) {
-
         var paths = [sourceFolder].concat(options.additionalWatchPaths);
-        paths.push.apply(paths, modules.map(m => m.path));
 
-            // watch the css folder if it isn't already watched as part of the source folder
+        // todo: assuming existence of src folder is not ideal. Unfortunately watching the whole module
+        // folder causes severe performance issues.
+        for (var i = 0; i < modules.length; i++) {
+            var sf = path.resolve(modules[i].path, "src");
+            if (fs.existsSync(sf)) paths.push(sf);
+        }
+        //paths.push.apply(paths, modules.map(m => m.path));
+
         var cssFolder = path.dirname(path.resolve(cwd, options.cssEntryPoint));
         if (cssFolder.indexOf(sourceFolder) !== 0) paths.push(cssFolder);
 
-            // watch image folders
+        // watch image folders
         for (let i = 0; i < options.imageFolders.length; i++) {
             var imgf = options.imageFolders[i];
             if (imgf.indexOf(sourceFolder) !== 0) paths.push(imgf);
         }
-
-            // watch tests
+        // watch tests
         if (options.browserTests) {
             paths.push(path.dirname(path.resolve(options.browserTests)));
         }
@@ -340,10 +344,11 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
         console.log(paths);
 
         var watcher = chokidar.watch(paths, {
-            ignored: /[\/\\]\./,
+            ignored: [/[\/\\]\./, "node_modules", "build", "dist"],
             persistent: true,
             ignoreInitial: true
         });
+
 
         watcher.on("all", function(type, file) {
             console.log(type + " event for " + file);
@@ -356,7 +361,7 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
                     }
                 });
             } else if (ext == ".js" || ext == ".html") {
-                    // if the changed file is .js or .html, need to run browserify
+                // if the changed file is .js or .html, need to run browserify
                 console.log("Browserify package needs rebuild");
                 async.series([buildClientJs, afterBuild], function() {});
             } else if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif") {

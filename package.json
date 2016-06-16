@@ -2,7 +2,7 @@
   "author": "Tom Clarkson",
   "name": "chondric-build",
   "description": "ChondricJS App Framework build tools",
-  "version": "3.0.57",
+  "version": "3.0.58",
   "repository": {
     "url": "http://github.com/tqc/chondric-build"
   },
