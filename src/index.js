@@ -147,6 +147,9 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
             if (fs.existsSync(preloadCssPath)) {
                 td.inlineCss = fs.readFileSync(preloadCssPath, "utf-8");
             }
+            else {
+                td.inlineCss = "";
+            }
 
 
             buildHtml(
@@ -331,7 +334,7 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
 
         // todo: assuming existence of src folder is not ideal. Unfortunately watching the whole module
         // folder causes severe performance issues.
-        for (var i = 0; i < modules.length; i++) {
+        for (let i = 0; i < modules.length; i++) {
             var sf = path.resolve(modules[i].path, "src");
             if (fs.existsSync(sf)) paths.push(sf);
             sf = path.resolve(modules[i].path, "clientapp");
