@@ -192,7 +192,8 @@ export function buildClientJs(opts, onComplete) {
         statusReporter,
         {
             selector: ".chondric-viewport,[chondric-viewport]",
-            onComplete: onComplete
+            onComplete: onComplete,
+            onError: onComplete
         }
     );
     b = b.bundle();
