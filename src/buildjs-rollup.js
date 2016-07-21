@@ -21,7 +21,7 @@ export function buildClientJs(opts, onComplete) {
     var rollup = require('rollup').rollup;
     var nodeResolve = require('rollup-plugin-node-resolve');
     var babel = require('rollup-plugin-babel');
-    var uglify = require('rollup-plugin-uglify');
+    //var uglify = require('rollup-plugin-uglify');
     var alias = require('./rollup-plugin-alias');
     var htmlmin = require('./rollup-plugin-htmlmin');
     var commonjs = require('./rollup-plugin-commonjs');

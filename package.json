@@ -59,8 +59,8 @@
   "devDependencies": {
     "babel-cli": "^6.9.0",
     "babel-eslint": "^6.0.4",
-    "eslint": "^3.0.0",
-    "eslint-config-tqc": "^1.0.3"
+    "eslint": "^3.1.1",
+    "eslint-config-tqc": "^1.0.7"
   },
   "optionalDependencies": {
     "gulp-imagemin": "^3.0.1"
