@@ -113,12 +113,13 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
     function buildClientJs(callback) {
         async.eachSeries(subvariations, function(subvariation, next) {
             if (!subvariation.outputScriptName) return next();
+            if (subvariation.apps && subvariation.apps.indexOf(variationFolderName) < 0) return next();
             var opts = {
                 options: options,
                 debugMode: debugMode,
                 tempFolder: tempFolder,
-                src: path.resolve(sourceFolder, variationFolderName + ".js"),
-                dest: path.resolve(varFolder, "app" + ".js"),
+                src: path.resolve(sourceFolder, (subvariation.jsEntryPoint || variationFolderName) + ".js"),
+                dest: path.resolve(varFolder, (subvariation.outputScriptName || "app") + ".js"),
                 moduleMappings: options.moduleMappings
             };
             if (options.useRollup) {
@@ -140,7 +141,10 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
         console.log(subvariations);
         async.eachSeries(subvariations, function(subvariation, next) {
             if (!subvariation.outputHtmlName) return next();
+            if (subvariation.apps && subvariation.apps.indexOf(variationFolderName) < 0) return next();
             var td = subvariation.additionalData || options.templateData || {};
+            td.app = variationFolderName;
+            td.env = env;
             td.variation = subvariation;
             td.options = options;
             var preloadCssPath = path.resolve(varFolder, "inline.css");
@@ -150,7 +154,6 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
             else {
                 td.inlineCss = "";
             }
-
 
             buildHtml(
                 {

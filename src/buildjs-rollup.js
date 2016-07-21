@@ -84,11 +84,12 @@ export function buildClientJs(opts, onComplete) {
                 presets: [
                     path.resolve(__dirname, "../node_modules/babel-preset-es2015-rollup")
                 ]
-            }),
-            uglify({
-                mangle: true,
-                compress: true
             })
+            // uglify is getting parse errors, so disable for now
+            //uglify({
+            //    mangle: true,
+            //    compress: true
+            //})
         ]
     }).then(function(bundle) {
         console.log("got bundle");
