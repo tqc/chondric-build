@@ -84,7 +84,7 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
 
     onBuildComplete = onBuildComplete || function(err) {
         if (!err) {
-            console.log("Build completed successfully");
+            console.log("Build of " + variationFolderName + " completed successfully");
         } else {
             console.log(err);
         }
@@ -324,15 +324,51 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
 
     function afterBuild(callback) {
         if (options.afterBrowserify) options.afterBrowserify(varFolder, env, variationFolderName);
-        console.log("Build completed successfully");
+        console.log("Build completed successfully in " + varFolder);
         callback();
     }
 
     var fullBuild = [buildClientJs, buildCss, copyHtml, copyImages, copyLib, afterBuild];
 
-    async.series(fullBuild, onBuildComplete);
 
-    if (watch) {
+    function setWatch(callback) {
+        callback();
+        if (!watch) return;
+
+        var cssTimer,
+            jsTimer,
+            imageTimer;
+
+        function cssChanged() {
+            clearTimeout(cssTimer);
+            cssTimer = setTimeout(function() {
+                console.log("CSS needs rebuild");
+                async.series([buildCss], function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
+            }, 3000);
+        }
+
+        function jsChanged() {
+            clearTimeout(jsTimer);
+            cssTimer = setTimeout(function() {
+                console.log("Browserify package needs rebuild");
+                async.series([buildClientJs, afterBuild], function() {});
+            }, 3000);
+
+
+        }
+
+        function imageChanged() {
+            clearTimeout(imageTimer);
+            cssTimer = setTimeout(function() {
+                console.log("Updating images");
+                async.series([copyImages], function() {});
+            }, 3000);
+        }
+
         var paths = [sourceFolder].concat(options.additionalWatchPaths);
 
         // todo: assuming existence of src folder is not ideal. Unfortunately watching the whole module
@@ -373,24 +409,21 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
             console.log(type + " event for " + file);
             var ext = path.extname(file);
             if (ext == ".scss") {
-                console.log("CSS needs rebuild");
-                async.series([buildCss], function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
+                cssChanged();
             } else if (ext == ".js" || ext == ".html") {
                 // if the changed file is .js or .html, need to run browserify
-                console.log("Browserify package needs rebuild");
-                async.series([buildClientJs, afterBuild], function() {});
+                jsChanged();
             } else if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif") {
-                    // src/images just needs to be copied if anything changes, and it can't contain anything used by browserify
-                console.log("Updating images");
-                async.series([copyImages], function() {});
+                // src/images just needs to be copied if anything changes, and it can't contain anything used by browserify
+                imageChanged();
             }
         });
-
     }
+
+    async.series([...fullBuild, setWatch], onBuildComplete);
+
+
+
 };
 
 tools.buildTask = function(cb) {
