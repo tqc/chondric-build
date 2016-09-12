@@ -186,27 +186,36 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
             globs.push(imgf + "/**");
         }
         console.log(globs);
-        try {
-            var imagemin = require('gulp-imagemin');
-            gulp.src(globs)
-                    .pipe(flatten())
-                    .pipe(imagemin({
-                        progressive: true,
-                        svgoPlugins: [{
-                            removeViewBox: false
-                        }]
-                    }))
-                    .pipe(gulp.dest(varFolder + "/images"))
-                    .on("end", callback);
-        } catch (ex) {
-                // probably just imagemin not being installed - fall back to regular file copy
-            console.log("Image optimization failed - copying images unmodified.");
-            gulp.src(globs)
-                    .pipe(flatten())
-                    .pipe(gulp.dest(varFolder + "/images"))
-                    .on("end", callback);
 
-        }
+        async.eachSeries(
+            globs,
+            (glob, next) => {
+                try {
+                    var imagemin = require('gulp-imagemin');
+                    gulp.src(glob)
+                            .pipe(flatten())
+                            .pipe(imagemin({
+                                progressive: true,
+                                svgoPlugins: [{
+                                    removeViewBox: false
+                                }]
+                            }))
+                            .pipe(gulp.dest(varFolder + "/images"))
+                            .on("end", next);
+                } catch (ex) {
+                        // probably just imagemin not being installed - fall back to regular file copy
+                    console.log("Image optimization failed - copying images unmodified.");
+                    gulp.src(glob)
+                            .pipe(flatten())
+                            .pipe(gulp.dest(varFolder + "/images"))
+                            .on("end", next);
+
+                }
+            },
+            callback
+        );
+
+
 
 
 
