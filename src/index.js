@@ -73,8 +73,13 @@ tools.buildVariation = function(variation, env, watch, destFolder, onBuildComple
         }].concat(options.subvariations || []),
         env, watch, destFolder, onBuildComplete);
 };
-
 tools.buildVariations = function(variationFolderName, subvariations, env, watch, destFolder, onBuildComplete) {
+
+    var cssTimer,
+        jsTimer,
+        imageTimer;
+
+
     console.log(subvariations);
     if (options.useRollup) {
         console.log("Building with Rollup");
@@ -112,6 +117,10 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
 
     function buildClientJs(callback) {
         async.eachSeries(subvariations, function(subvariation, next) {
+            if (jsTimer) {
+                console.log("Change detected while building");
+                return next("Change detected while building - cancelling");
+            }
             if (!subvariation.outputScriptName) return next();
             if (subvariation.apps && subvariation.apps.indexOf(variationFolderName) < 0) return next();
             var opts = {
@@ -344,10 +353,6 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
         callback();
         if (!watch) return;
 
-        var cssTimer,
-            jsTimer,
-            imageTimer;
-
         function cssChanged() {
             clearTimeout(cssTimer);
             cssTimer = setTimeout(function() {
@@ -362,17 +367,16 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
 
         function jsChanged() {
             clearTimeout(jsTimer);
-            cssTimer = setTimeout(function() {
+            jsTimer = setTimeout(function() {
                 console.log("Browserify package needs rebuild");
+                jsTimer = 0;
                 async.series([buildClientJs, afterBuild], function() {});
             }, 3000);
-
-
         }
 
         function imageChanged() {
             clearTimeout(imageTimer);
-            cssTimer = setTimeout(function() {
+            imageTimer = setTimeout(function() {
                 console.log("Updating images");
                 async.series([copyImages], function() {});
             }, 3000);
