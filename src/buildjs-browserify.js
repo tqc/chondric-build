@@ -1,6 +1,6 @@
 import path from "path";
 
-var browserify = require("browserify");
+var browserify = require("browserify-incremental");
 var es6ify = require("es6ify");
 var stringify = require('stringify');
 
@@ -15,17 +15,91 @@ var gulp = require('gulp');
 
 var fs = require("fs");
 
+
+
+var esVersions = {};
+function getESVersion(file) {
+
+    // inside node modules
+    var nmi = file.lastIndexOf("node_modules") + 13;
+
+    var nmp = file.substr(0, nmi);
+
+    var seg = file.substr(nmi).split(path.sep);
+
+    var pkgPath = path.resolve(nmp, seg[0], "package.json");
+    if (esVersions[pkgPath]) return esVersions[pkgPath];
+
+    // scoped packages may have an extra folder level
+    if (!fs.existsSync(pkgPath)) {
+        pkgPath = path.resolve(nmp, seg[0], seg[1], "package.json");
+    }
+
+    if (esVersions[pkgPath]) return esVersions[pkgPath];
+
+    // no package found, assume es5
+    if (!fs.existsSync(pkgPath)) {
+        esVersions[pkgPath] = 5;
+        return 5;
+    }
+
+    var pkg = JSON.parse(fs.readFileSync(pkgPath), "utf8");
+    if (pkg["esnext:main"] && pkg["esnext:main"] == pkg["main"]) {
+        //console.log("found es6 only package in " + pkgPath);
+        esVersions[pkgPath] = 6;
+        return 6;
+    }
+    if (pkg["esnext:main"]) {
+        // todo: this isn't quite right - could be looking at a file in the dist folder
+        esVersions[pkgPath] = 6;
+        return 6;
+    }
+    else {
+        esVersions[pkgPath] = 5;
+        return 5;
+    }
+
+}
+
+
+var filteredEs6ify = filterTransform(
+    function(file) {
+        // browserify needs transforms to be global, and compiling es5 modules
+        // breaks stuff, so only compile the bits we know are es6
+
+        // no need to compile something that isn't javascript
+        if (path.extname(file) != ".js") return false;
+
+        // find the package path
+        if (file.indexOf("node_modules") >= 0) {
+            return getESVersion(file) == 6;
+        }
+        else {
+            // console.log("building local file as es6");
+            // local file or linked module
+            // todo: still need to check for package.json
+            return true;
+        }
+    },
+    es6ify
+);
+
+
+es6ify.traceurOverrides = {
+    annotations: true,
+    types: true,
+    memberVariables: true
+};
+
+
+
+
 export function buildClientJs(opts, onComplete) {
     console.log("starting browserify build");
     var options = opts.options;
     var tempFolder = opts.tempFolder;
     var debugMode = opts.debugMode;
 
-    es6ify.traceurOverrides = {
-        annotations: true,
-        types: true,
-        memberVariables: true
-    };
 
     var moduleMappings = [{
         src: 'hostsettings.js',
@@ -51,72 +125,7 @@ export function buildClientJs(opts, onComplete) {
         console.log(m.expose + " => " + m.cwd);
     }
 
-    var esVersions = {};
-    function getESVersion(file) {
 
-        // inside node modules
-        var nmi = file.lastIndexOf("node_modules") + 13;
-
-        var nmp = file.substr(0, nmi);
-
-        var seg = file.substr(nmi).split(path.sep);
-
-        var pkgPath = path.resolve(nmp, seg[0], "package.json");
-        if (esVersions[pkgPath]) return esVersions[pkgPath];
-
-        // scoped packages may have an extra folder level
-        if (!fs.existsSync(pkgPath)) {
-            pkgPath = path.resolve(nmp, seg[0], seg[1], "package.json");
-        }
-
-        if (esVersions[pkgPath]) return esVersions[pkgPath];
-
-        // no package found, assume es5
-        if (!fs.existsSync(pkgPath)) {
-            esVersions[pkgPath] = 5;
-            return 5;
-        }
-
-        var pkg = JSON.parse(fs.readFileSync(pkgPath), "utf8");
-        if (pkg["esnext:main"] && pkg["esnext:main"] == pkg["main"]) {
-            //console.log("found es6 only package in " + pkgPath);
-            esVersions[pkgPath] = 6;
-            return 6;
-        }
-        if (pkg["esnext:main"]) {
-            // todo: this isn't quite right - could be looking at a file in the dist folder
-            esVersions[pkgPath] = 6;
-            return 6;
-        }
-        else {
-            esVersions[pkgPath] = 5;
-            return 5;
-        }
-
-    }
-
-
-    var filteredEs6ify = filterTransform(
-        function(file) {
-            // browserify needs transforms to be global, and compiling es5 modules
-            // breaks stuff, so only compile the bits we know are es6
-
-            // no need to compile something that isn't javascript
-            if (path.extname(file) != ".js") return false;
-
-            // find the package path
-            if (file.indexOf("node_modules") >= 0) {
-                return getESVersion(file) == 6;
-            }
-            else {
-                // console.log("building local file as es6");
-                // local file or linked module
-                // todo: still need to check for package.json
-                return true;
-            }
-        },
-        es6ify
-    );
 
     var globalShim = filterTransform(
         function(file) {
@@ -128,15 +137,11 @@ export function buildClientJs(opts, onComplete) {
 
 
 
-
-
-
-
-
     var b = browserify(
         {
             debug: debugMode,
-            extensions: [".txt", ".html"]
+            extensions: [".txt", ".html"],
+            cacheFile: path.resolve(tempFolder, "browserify-cache.json")
         })
         .add(es6ify.runtime, {
             entry: true
