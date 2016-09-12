@@ -433,7 +433,7 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
         });
     }
 
-    async.series([...fullBuild, setWatch], onBuildComplete);
+    async.series(fullBuild.concat([setWatch]), onBuildComplete);
 
 
 
