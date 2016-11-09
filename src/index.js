@@ -127,6 +127,7 @@ tools.buildVariations = function(variationFolderName, subvariations, env, watch,
                 options: options,
                 debugMode: debugMode,
                 tempFolder: tempFolder,
+                allowIncrementalBuild: env == "dev",
                 src: path.resolve(sourceFolder, (subvariation.jsEntryPoint || variationFolderName) + ".js"),
                 dest: path.resolve(varFolder, (subvariation.outputScriptName || "app") + ".js"),
                 moduleMappings: options.moduleMappings

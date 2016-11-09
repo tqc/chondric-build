@@ -1,6 +1,7 @@
 import path from "path";
 
-var browserify = require("browserify-incremental");
+var browserify = require("browserify");
+var browserifyInc = require("browserify-incremental");
 var es6ify = require("es6ify");
 var stringify = require('stringify');
 
@@ -14,8 +15,6 @@ var stripify = require("stripify");
 var gulp = require('gulp');
 
 var fs = require("fs");
-
-
 
 var esVersions = {};
 function getESVersion(file) {
@@ -134,10 +133,11 @@ export function buildClientJs(opts, onComplete) {
         require('browserify-global-shim').configure(options.globals)
     );
 
+    console.log("Starting browserify");
+    console.log("tempFolder = " + tempFolder);
 
 
-
-    var b = browserify(
+    var b = (opts.allowIncrementalBuild ? browserifyInc : browserify)(
         {
             debug: debugMode,
             extensions: [".txt", ".html"],
